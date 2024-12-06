@@ -1,5 +1,4 @@
 import express from "express";
-//import { lightbulbs as plugs } from "../tradfri/connect.js";
 import { plugs } from "../tradfri/devices.js";  // Aquí puedes acceder a los dispositivos
 
 

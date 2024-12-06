@@ -10,6 +10,8 @@ if (Object.keys(lightbulbs).length > 0) {
     id: device.instanceId,  // ID del dispositivo
     name: device.name,  // Nombre del dispositivo
     status: device.state,  // Estado del dispositivo
+    onOff: device.onOff,  // Estado del dispositivo (onOff)
+    brightness: device.brightness,  // Brillo del dispositivo
     available: device.alive  // Disponibilidad (alive)
   }));
   allDevices.push({
@@ -23,6 +25,7 @@ if (Object.keys(plugs).length > 0) {
   const plugDevices = Object.values(plugs).map(device => ({
     id: device.instanceId,  // ID del dispositivo
     name: device.name,  // Nombre del dispositivo
+    onOff: device.onOff, //si esta encendido o apagado
     status: device.state,  // Estado del dispositivo
     available: device.alive  // Disponibilidad (alive)
   }));

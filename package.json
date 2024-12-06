@@ -1,11 +1,12 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "conexion con ikea tradfri para casaapp",
+  "description": "conexion con Ikea tradfri para casaapp",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
   },
   "keywords": [
     "backend",
@@ -18,6 +19,10 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "node-tradfri-client": "^3.2.0",
+    "socket.io": "^4.8.1",
     "y": "file:"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
   }
 }

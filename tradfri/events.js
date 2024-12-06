@@ -1,17 +1,6 @@
 import { AccessoryTypes } from "node-tradfri-client";
 import { lightbulbs, plugs } from "./devices.js";
 
-/*
-export function tradfri_deviceUpdated(device) {
-  if (device.type === AccessoryTypes.lightbulb) {
-    lightbulbs[device.instanceId] = device;
-    console.log(`Bombilla actualizada: ${device.instanceId}`);
-  }else if (device.type === AccessoryTypes.outlet) {  // Asegúrate de que los enchufes se agregan correctamente
-    plugs[device.instanceId] = device;
-    console.log(`Enchufe actualizado: ${device.instanceId}`);
-  }
-}
-*/
 
 export function tradfri_deviceRemoved(instanceId) {
   if (lightbulbs[instanceId]) {
