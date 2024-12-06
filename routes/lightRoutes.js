@@ -1,5 +1,8 @@
 import express from "express";
-import { lightbulbs } from "../tradfri/connect.js";
+//import { lightbulbs } from "../tradfri/connect.js";
+import { lightbulbs } from "../tradfri/devices.js";  // Aquí puedes acceder a los dispositivos
+
+
 
 const router = express.Router();
 
