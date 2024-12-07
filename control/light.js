@@ -23,8 +23,8 @@ export function dimmerLight(id, brightnessIN) {
     if (isNaN(brightness) || brightness < 0 || brightness > 100) {
       console.log("El valor del brillo debe estar entre 0 y 100.");
     } else {
-      const light = lightbulbs[id]; // Accede directamente a la luz
-
+        const light = lightbulbs[id] && lightbulbs[id].lightList[0];
+        //console.log("Bombilla encontrada:", light);
       if (light.isDimmable) {
         light
           .setBrightness(brightness)
