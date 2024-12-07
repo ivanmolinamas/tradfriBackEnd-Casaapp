@@ -3,7 +3,7 @@ import { tradfri_deviceUpdated, tradfri_deviceRemoved } from "./events.js";
 import { gatewayIp, securityCode } from "../config/env.js";
 
 const tradfri = new TradfriClient(gatewayIp);
-const lightbulbs = {};  // Puedes agregar otros dispositivos aquí si lo deseas
+//const lightbulbs = {};  // Puedes agregar otros dispositivos aquí si lo deseas
 
 export async function connectTradfri() {
   try {
@@ -20,4 +20,7 @@ export async function connectTradfri() {
   }
 }
 
-export { tradfri, lightbulbs };  // Exportar para usar en otros archivos
+//export { tradfri, lightbulbs, plugs };  // Exportar para usar en otros archivos
+export { tradfri }; // Exportar para usar en otros archivos
+
+// to do - encontrar la manera de crear una lista de bombillas y no exportar la lista de ikea entera

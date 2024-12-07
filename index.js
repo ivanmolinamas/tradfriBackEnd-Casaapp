@@ -1,50 +1,68 @@
 import express from "express";
 import http from "http";
-import {Server as SocketServer} from "socket.io";
+import { Server as SocketServer } from "socket.io";
 import cors from "cors";
-import { connectTradfri } from "./tradfri/connect.js";  // Asegúrate de importar correctamente
-import deviceRoutes from "./routes/deviceRoutes.js";  // Importa las rutas
+import { connectTradfri } from "./tradfri/connect.js"; // Asegúrate de importar correctamente
+import deviceRoutes from "./routes/deviceRoutes.js"; // Importa las rutas
 import lightRoutes from "./routes/lightRoutes.js";
 import plugRoutes from "./routes/plugRoutes.js";
+import { lightDevices, plugDevices } from "./tradfri/devices.js";
+import { toggleLight , dimmerLight } from "./control/light.js";
 
 
 
 const app = express();
 const server = http.createServer(app); //servidor http
-const io = new SocketServer(server, { //servidor webscoket
+const io = new SocketServer(server, {
+  //servidor webscoket
   cors: {
-  origin: "http://localhost:5173",  // Permite todas las solicitudes
-  methods: ["GET", "POST"]  // Métodos permitidos
-  }
+    origin: "http://localhost:5173", // Permite todas las solicitudes
+    methods: ["GET", "POST"], // Métodos permitidos
+  },
 });
 
 app.use(cors());
-app.use(express.json());  // Para que el cuerpo de las solicitudes esté en formato JSON
+app.use(express.json()); // Para que el cuerpo de las solicitudes esté en formato JSON
 
 // Rutas
-app.use("/api", deviceRoutes);  // Usa el prefijo '/api' para las rutas de dispositivos
-app.use("/light", lightRoutes);  // Usa el prefijo '/light' para las rutas de bombillas
-app.use("/plug", plugRoutes);  // Usa el prefijo '/plug' para las rutas de enchufes
+app.use("/api", deviceRoutes); // Usa el prefijo '/api' para las rutas de dispositivos
+app.use("/light", lightRoutes); // Usa el prefijo '/light' para las rutas de bombillas
+app.use("/plug", plugRoutes); // Usa el prefijo '/plug' para las rutas de enchufes
 
-// Evento cuando un cliente se conecta
+// Conexion socket io
 io.on("connection", (socket) => {
   console.log("Nuevo cliente conectado");
-  
+
   // Enviar estado de los dispositivos al cliente
-  /*
+  const lights = lightDevices();
+  const plugs = plugDevices();
+  //console.log(lights);
   socket.emit("devicesState", {
-    lightbulbs,
-    plugs
+    lights,
+    plugs,
   });
-*/
+
+  // Escuchar encendido y apagado de bombillas
+  socket.on("lightToggle", (lightId) => {
+    console.log("Encendido/Apagado de bombilla:", lightId);
+    // Lógica para encender o apagar la bombilla con el ID proporcionado
+  });
+  // Evento de encendido y apagado
+  socket.on("toggleDevice", (data) => {
+    const { id } = data;
+    toggleLight(id);
+  });
+  // evneto para dimmer
+  socket.on("dimmerDevice", (data) => {
+    const { id , brightness } = data;
+    dimmerLight(id , brightness);
+  });
+
   // Eventualmente puedes emitir un evento cuando un dispositivo cambia de estado
   socket.on("disconnect", () => {
     console.log("Cliente desconectado");
   });
-
-
 });
-
 
 // Conectar con el Gateway de IKEA
 connectTradfri();
@@ -55,17 +73,9 @@ app.listen(PORT, () => {
   console.log(`Servidor en ejecución en el puerto ${PORT}`);
 });
 
-
 server.listen(4000, () => {
   console.log("Servidor WebSocket en ejecución en el puerto 4000");
 });
-
-
-
-
-
-
-
 
 /*
 Explicación del código
