@@ -10,12 +10,12 @@ export const lightDevices = () => {
         const light = device.lightList[0]; // Acceder al primer elemento de la lista de luces
         return {
           id: device.instanceId,
-          name: device.name || "noName", // Fallback si no tiene nombre
-          type: device.type,
-          onOff: light.onOff,
-          brightness: light.dimmer,
-          alive: device.alive,
-          dimable: light.isDimmable,
+          name: device.name || "noName", // noName si no tiene nombre
+          type: device.type, // tipo
+          onOff: light.onOff, // estado actual del la bombilla
+          brightness: light.dimmer, // nivel de brillo
+          alive: device.alive, // comprobamos que esta disponible
+          dimable: light.isDimmable,  // comprobamos si es dimeable
         };
       })
       .sort((a, b) => a.id - b.id); // Ordenar por ID
@@ -27,10 +27,10 @@ export const plugDevices = () => {
       .map((device) => {
         return {
           id: device.instanceId,
-          name: device.name || "noName", // Fallback si no tiene nombre
-          type: device.type,
+          name: device.name || "noName", // noName si no tiene nombre
+          type: device.type, // tipo
           onOff: device.plugList[0]?.onOff || false, // Verificar que tenga plugList y obtener onOff
-          alive: device.alive,
+          alive: device.alive,  // comprobamos que esta disponible
         };
       })
       .sort((a, b) => a.id - b.id); // Ordenar por ID

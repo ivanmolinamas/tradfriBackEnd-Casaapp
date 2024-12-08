@@ -12,15 +12,14 @@ export async function connectTradfri() {
     console.log("Conexión exitosa al gateway.");
 
     tradfri
-      .on("device updated", tradfri_deviceUpdated)
-      .on("device removed", tradfri_deviceRemoved)
+      .on("device updated", tradfri_deviceUpdated) // suscripcion a las actualizaciones de estado
+      .on("device removed", tradfri_deviceRemoved) // suscricpcion a dispositivos borrados
       .observeDevices();
+      console.log("Observando dispositivos...");
   } catch (error) {
     console.error("Error al conectar con el gateway:", error);
   }
 }
 
-//export { tradfri, lightbulbs, plugs };  // Exportar para usar en otros archivos
 export { tradfri }; // Exportar para usar en otros archivos
 
-// to do - encontrar la manera de crear una lista de bombillas y no exportar la lista de ikea entera

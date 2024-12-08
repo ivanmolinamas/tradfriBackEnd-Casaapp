@@ -1,5 +1,7 @@
 import { AccessoryTypes } from "node-tradfri-client";
-import { lightbulbs, plugs } from "./devices.js";
+import { lightbulbs, lightDevices, plugs , plugDevices } from "./devices.js";
+import { io  } from "../services/conectServices.js";
+
 
 export function tradfri_deviceRemoved(instanceId) {
   if (lightbulbs[instanceId]) {
@@ -13,12 +15,31 @@ export function tradfri_deviceRemoved(instanceId) {
 }
 
 // Función de actualización
-// clasificamos entre bombillas y enchufes
 export function tradfri_deviceUpdated(device) {
   // Para bombillas
+  console.log("se actualiza el estado de una bombilla")
   if (device.type === AccessoryTypes.lightbulb) {
     lightbulbs[device.instanceId] = device;
     //console.log(`Bombilla actualizada: ${device.instanceId}`, device);  // Verificar que se está agregando correctamente
+    //console.log(device)
+
+    // Notifica al frontend
+    const lights = lightDevices();
+    const plugs = plugDevices();
+    //console.log(lights);
+    io.emit("devicesState", {
+      lights,
+      plugs,
+    });
+    /**
+     *  {
+      id: device.instanceId,
+      name: device.name,
+      type: "lightbulb",
+      state: device.lightList[0]?.onOff,
+      brightness: device.lightList[0]?.dimmer,
+    }
+     */
   }
 
   // Para enchufes
