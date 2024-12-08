@@ -16,6 +16,8 @@ export const lightDevices = () => {
           brightness: light.dimmer, // nivel de brillo
           alive: device.alive, // comprobamos que esta disponible
           dimable: light.isDimmable,  // comprobamos si es dimeable
+          colorTemperature: light.colorTemperature, // obtenemos la temperatura de color
+          spectrum: light.spectrum, // obtenemos el tipo de luz
         };
       })
       .sort((a, b) => a.id - b.id); // Ordenar por ID

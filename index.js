@@ -3,9 +3,8 @@ import deviceRoutes from "./routes/deviceRoutes.js"; // Importa las rutas
 import lightRoutes from "./routes/lightRoutes.js";
 import plugRoutes from "./routes/plugRoutes.js";
 import { lightDevices, plugDevices } from "./tradfri/devices.js";
-import { toggleLight , dimmerLight } from "./control/light.js";
-import { app , io , server } from "./services/conectServices.js";
-
+import { toggleLight, setDimmerLight, setTemperature } from "./control/light.js";
+import { app, io, server } from "./services/conectServices.js";
 
 // Rutas para conexion con GET y POST
 app.use("/api", deviceRoutes); // Usa el prefijo '/api' para las rutas de dispositivos
@@ -26,29 +25,32 @@ io.on("connection", (socket) => {
   });
 
   // Escuchar encendido y apagado de bombillas
-  socket.on("lightToggle", (lightId) => {
+  socket.on("setLightToggle", (lightId) => {
     console.log("Encendido/Apagado de bombilla:", lightId);
     // Lógica para encender o apagar la bombilla con el ID proporcionado
   });
   // Evento de encendido y apagado
-  socket.on("toggleDevice", (data) => {
+  socket.on("setToggleDevice", (data) => {
     const { id } = data;
     toggleLight(id);
   });
-  // evneto para dimmer
-  socket.on("dimmerDevice", (data) => {
-    const { id , brightness } = data;
-    dimmerLight(id , brightness);
+  // evento para dimmer
+  socket.on("setDimmerDevice", (data) => {
+    const { id, brightness } = data;
+    setDimmerLight(id, brightness);
+  });
+
+  // evento para cambiar temperatura de color
+  socket.on("setTemperature", (data) => {
+    const { id, temperature } = data;
+    setTemperature(id, temperature);
   });
 
   // Eventualmente puedes emitir un evento cuando un dispositivo cambia de estado
   socket.on("disconnect", () => {
     console.log("Cliente desconectado");
   });
-
 });
-
-
 
 // Conectar con el Gateway de IKEA
 connectTradfri();
@@ -62,9 +64,6 @@ app.listen(PORT, () => {
 server.listen(4000, () => {
   console.log("Servidor WebSocket en ejecución en el puerto 4000");
 });
-
-
-
 
 /*
 Explicación del código
