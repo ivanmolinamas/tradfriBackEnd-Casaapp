@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb-container
+    environment:
+      MYSQL_ROOT_PASSWORD: maria
+      MYSQL_DATABASE: db1
+    ports:
+      - "3306:3306"
+    volumes:
+      - C:\WS\TFG\backend\datos:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin
+    ports:
+      - "3080:80"
+    depends_on:
+      - mariadb
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mariadb
+volumes:
+  datos-mariadb:

@@ -26,7 +26,7 @@ export function setDimmerLight(id, brightnessIN) {
       //console.log("Bombilla encontrada:", light);
       if (light.isDimmable) {
         light
-          .setBrightness(brightness) // ajustamos el brillo dado
+          .setBrightness(brightness,0) // ajustamos el brillo dado
           .then((result) => {
             if (result) {
               console.log(

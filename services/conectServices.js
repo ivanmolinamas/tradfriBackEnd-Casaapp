@@ -9,7 +9,8 @@ const server = http.createServer(app); //servidor http
 const io = new SocketServer(server, { 
   //servidor webscoket
   cors: {
-    origin: "http://localhost:5173", // Permite todas las solicitudes
+    //origin: "http://localhost:5173", // Permite todas las solicitudes
+    origin: "*", // Permite todas las solicitudes
     methods: ["GET", "POST"], // Métodos permitidos
   },
 });

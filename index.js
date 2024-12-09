@@ -13,7 +13,7 @@ app.use("/plug", plugRoutes); // Usa el prefijo '/plug' para las rutas de enchuf
 
 // Conexion a traves de socket io
 io.on("connection", (socket) => {
-  console.log("Nuevo cliente conectado");
+  console.log("Nuevo cliente conectado socketIo");
 
   // Enviar estado de los dispositivos al cliente
   const lights = lightDevices();
@@ -61,7 +61,7 @@ app.listen(PORT, () => {
   console.log(`Servidor en ejecución en el puerto ${PORT}`);
 });
 
-server.listen(4000, () => {
+server.listen(4000,"0.0.0.0", () => {
   console.log("Servidor WebSocket en ejecución en el puerto 4000");
 });
 
