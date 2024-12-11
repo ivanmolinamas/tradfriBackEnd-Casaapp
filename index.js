@@ -5,6 +5,10 @@ import plugRoutes from "./routes/plugRoutes.js";
 import { lightDevices, plugDevices } from "./tradfri/devices.js";
 import { toggleLight, setDimmerLight, setTemperature } from "./control/light.js";
 import { app, io, server } from "./services/conectServices.js";
+import authRoutes from "./auth/authRoutes.js";
+
+//import connectDB from "./services/db.js"; // Ruta correcta a tu archivo db.js
+
 
 // Rutas para conexion con GET y POST
 app.use("/api", deviceRoutes); // Usa el prefijo '/api' para las rutas de dispositivos
@@ -51,6 +55,26 @@ io.on("connection", (socket) => {
     console.log("Cliente desconectado");
   });
 });
+
+
+
+// Usa el prefijo '/api' para las rutas de dispositivos
+app.use("/auth", authRoutes);
+
+// DEBUG
+// Llama a connectDB antes de iniciar el servidor
+/*
+(async () => {
+  await connectDB(); // Aquí debería ejecutarse la conexión
+})();
+*/
+import {conectar} from "./services/db.js";
+
+conectar();
+
+
+
+
 
 // Conectar con el Gateway de IKEA
 connectTradfri();
