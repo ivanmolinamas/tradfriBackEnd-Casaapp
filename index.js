@@ -6,7 +6,7 @@ import { lightDevices, plugDevices } from "./tradfri/devices.js";
 import { toggleLight, setDimmerLight, setTemperature } from "./control/light.js";
 import { app, io, server } from "./services/conectServices.js";
 import authRoutes from "./auth/authRoutes.js";
-
+import { registrarUsuario , login } from "./control/db.js";
 //import connectDB from "./services/db.js"; // Ruta correcta a tu archivo db.js
 
 
@@ -54,6 +54,29 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Cliente desconectado");
   });
+
+// conexion con base de datos
+socket.on("register", async (data, callback) => {
+  try {
+    const result = await registrarUsuario(data);
+    callback({ status: "success", ...result });
+  } catch (error) {
+    callback({ status: "error", message: error.message }); // El mensaje de error viene directamente de la función
+  }
+});
+/*
+socket.on("login", async (data, callback) => {
+  try {
+    const result = await login(data);
+    callback({ status: "success", ...result });
+  } catch (error) {
+    callback({ status: "error", message: error.message }); // El mensaje de error viene directamente de la función
+  }
+});
+*/
+socket.on("login", async (data, callback) => {
+  await login(data, callback); // Pasa el callback correctamente
+});
 });
 
 

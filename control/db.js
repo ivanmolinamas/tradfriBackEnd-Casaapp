@@ -6,13 +6,8 @@ import { SECRET_KEY, SALT_ROUNDS } from "../config/env.js"; // Clave secreta en 
 
 import { conectar as connectDB } from "../services/db.js";
 
-const router = express.Router();
-
-//const SECRET_KEY = "tu_clave_secreta"; // Usa una clave más segura en producción
-
-// Registro
-router.post("/register", async (req, res) => {
-  const { user, email, password, rol } = req.body;
+async function registrarUsuario({ user, email, password, rol = "usuario" }) {
+  // const { user, email, password, rol } = req.body;
   console.log("Registrando usuario");
   console.log(user, email, password, rol);
   try {
@@ -32,48 +27,49 @@ router.post("/register", async (req, res) => {
 
     if (rows.length > 0) {
       console.log("El usuario ya existe");
-      return res.status(400).json({ error: "El usuario o el email ya existen" });
+      return res
+        .status(400)
+        .json({ error: "El usuario o el email ya existen" });
     }
 
     // Insertar en la base de datos
     const result = await conexion.query(
       "INSERT INTO usuarios (user, email, password, rol) VALUES (?, ?, ?, ?)",
-      [user, email, hashedPassword, rol || "usuario"]);
-      console.log("usuario registrado correctamente!")
+      [user, email, hashedPassword, rol || "usuario"]
+    );
+    console.log("usuario registrado correctamente!");
 
     res.status(201).json({ message: "Usuario registrado", id: result.id });
   } catch (error) {
     console.error("Error durante el registro:", error);
     res.status(500).json({ error: "Error al registrar el usuario" });
   }
-});
+}
 
-// Inicio de sesión
-router.post("/login", async (req, res) => {
-  const { user, password } = req.body;
+async function login(data, callback) {
+  const { user, password } = data;
+  // const { user, password } = req.body;
   console.log("Intentando iniciar sesión");
-  console.log(user, password);
+  //console.log(user, password);
   try {
     const conexion = await connectDB();
-    console.log("Conexión exitosa");
+    //console.log("Conexión exitosa");
     const [rows] = await conexion.query(
       "SELECT * FROM usuarios WHERE user = ?",
       [user]
     );
-    console.log(rows);
-    if (rows.length === 0)
+    //console.log(rows);
+    if (rows.length === 0){
       return res.status(404).json({ error: "Usuario no encontrado" });
-
+    }
+    //console.log(rows);
     const usuario = rows;
-    console.log(usuario);
-    console.log("Usuario encontrado");
-    console.log("pass", usuario.password);
-    console.log("id", usuario.id);
-    console.log("usuario", usuario.user);
+    //console.log(usuario);
 
     // FALTA ACTIVAR BCRYPT
-     const isPasswordValid = await bcrypt.compare(password, usuario.password); //comparamos la contraseña
-    if (!isPasswordValid) return res.status(401).json({ error: "Contraseña incorrecta" });
+    const isPasswordValid = await bcrypt.compare(password, usuario.password); //comparamos la contraseña
+    if (!isPasswordValid)
+      return res.status(401).json({ error: "Contraseña incorrecta" });
     //if (password === usuario.password) console.log("Contraseña correcta");
 
     // Genera un token JWT con el rol
@@ -82,29 +78,14 @@ router.post("/login", async (req, res) => {
       SECRET_KEY,
       { expiresIn: "1h" }
     );
-    res.json({ token, rol: usuario.rol });
+    //se devuelve el callback con el status y el token con su rol
+    callback({ status: "success", token, rol: usuario.rol });
     //res.json({ rol: usuario.rol });
+    console.log("Inicio de sesión exitoso. ID",usuario.id,"username: " ,usuario.user);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Error al iniciar sesión" });
+    console.error("Error en el evento 'login':", error);
+      callback({ status: "error", message: "Error interno del servidor" });
   }
-});
-
-function authorizeRoles(...allowedRoles) {
-  return (req, res, next) => {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
-    if (!token) return res.sendStatus(401);
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-      if (err) return res.sendStatus(403);
-      if (!allowedRoles.includes(user.rol)) return res.sendStatus(403); // Rol no permitido
-      req.user = user;
-      next();
-    });
-  };
 }
 
-
-
-export default router;
+export { registrarUsuario, login };
