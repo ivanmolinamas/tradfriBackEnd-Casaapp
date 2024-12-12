@@ -27,6 +27,14 @@ io.on("connection", (socket) => {
     lights,
     plugs,
   });
+  // Eschcua pedido de datos de los dispositivos
+  socket.on("getDevicesState", () => {
+    console.log("Recibida solicitud de dispositivos");
+    socket.emit("devicesState", {
+      lights,
+      plugs,
+    });
+  });
 
   // Escuchar encendido y apagado de bombillas
   socket.on("setLightToggle", (lightId) => {
