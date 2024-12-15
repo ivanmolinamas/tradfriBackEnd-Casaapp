@@ -3,12 +3,15 @@ import deviceRoutes from "./routes/deviceRoutes.js"; // Importa las rutas
 import lightRoutes from "./routes/lightRoutes.js";
 import plugRoutes from "./routes/plugRoutes.js";
 import { lightDevices, plugDevices } from "./tradfri/devices.js";
-import { toggleLight, setDimmerLight, setTemperature } from "./control/light.js";
+import {
+  toggleLight,
+  setDimmerLight,
+  setTemperature,
+} from "./control/light.js";
 import { app, io, server } from "./services/conectServices.js";
 import authRoutes from "./auth/authRoutes.js";
-import { registrarUsuario , login } from "./control/db.js";
+import { registrarUsuario, login, verifyTokenHandler } from "./control/db.js";
 //import connectDB from "./services/db.js"; // Ruta correcta a tu archivo db.js
-
 
 // Rutas para conexion con GET y POST
 app.use("/api", deviceRoutes); // Usa el prefijo '/api' para las rutas de dispositivos
@@ -29,7 +32,7 @@ io.on("connection", (socket) => {
   });
   // Eschcua pedido de datos de los dispositivos
   socket.on("getDevicesState", () => {
-    console.log("Recibida solicitud de dispositivos");
+    console.log("Recibida solicitud de estado dispositivos");
     socket.emit("devicesState", {
       lights,
       plugs,
@@ -63,16 +66,16 @@ io.on("connection", (socket) => {
     console.log("Cliente desconectado");
   });
 
-// conexion con base de datos
-socket.on("register", async (data, callback) => {
-  try {
-    const result = await registrarUsuario(data);
-    callback({ status: "success", ...result });
-  } catch (error) {
-    callback({ status: "error", message: error.message }); // El mensaje de error viene directamente de la función
-  }
-});
-/*
+  // conexion con base de datos
+  socket.on("register", async (data, callback) => {
+    try {
+      const result = await registrarUsuario(data);
+      callback({ status: "success", ...result });
+    } catch (error) {
+      callback({ status: "error", message: error.message }); // El mensaje de error viene directamente de la función
+    }
+  });
+  /*
 socket.on("login", async (data, callback) => {
   try {
     const result = await login(data);
@@ -82,12 +85,16 @@ socket.on("login", async (data, callback) => {
   }
 });
 */
-socket.on("login", async (data, callback) => {
-  await login(data, callback); // Pasa el callback correctamente
-});
-});
+  socket.on("login", async (data, callback) => {
+    await login(data, callback); // Pasa el callback correctamente
+  });
 
-
+  // Maneja la verificación del token
+  //verifyTokenHandler(socket);
+  socket.on("verifyToken", async (data, callback) => {
+    await verifyTokenHandler(data, callback); // Pasa el callback correctamente
+  });
+});
 
 // Usa el prefijo '/api' para las rutas de dispositivos
 app.use("/auth", authRoutes);
@@ -99,13 +106,9 @@ app.use("/auth", authRoutes);
   await connectDB(); // Aquí debería ejecutarse la conexión
 })();
 */
-import {conectar} from "./services/db.js";
+import { conectar } from "./services/db.js";
 
 conectar();
-
-
-
-
 
 // Conectar con el Gateway de IKEA
 connectTradfri();
@@ -116,7 +119,7 @@ app.listen(PORT, () => {
   console.log(`Servidor en ejecución en el puerto ${PORT}`);
 });
 
-server.listen(4000,"0.0.0.0", () => {
+server.listen(4000, "0.0.0.0", () => {
   console.log("Servidor WebSocket en ejecución en el puerto 4000");
 });
 

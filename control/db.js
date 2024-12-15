@@ -59,7 +59,7 @@ async function login(data, callback) {
       [user]
     );
     //console.log(rows);
-    if (rows.length === 0){
+    if (rows.length === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
     //console.log(rows);
@@ -79,13 +79,48 @@ async function login(data, callback) {
       { expiresIn: "1h" }
     );
     //se devuelve el callback con el status y el token con su rol
-    callback({ status: "success", token, rol: usuario.rol });
+    console.log(token, "user:", usuario.user, "rol:", usuario.rol);
+    callback({
+      status: "success",
+      token,
+      user: usuario.user,
+      rol: usuario.rol,
+    });
     //res.json({ rol: usuario.rol });
-    console.log("Inicio de sesión exitoso. ID",usuario.id,"username: " ,usuario.user);
+    console.log(
+      "Inicio de sesión exitoso. ID",
+      usuario.id,
+      "username: ",
+      usuario.user
+    );
   } catch (error) {
     console.error("Error en el evento 'login':", error);
-      callback({ status: "error", message: "Error interno del servidor" });
+    callback({ status: "error", message: "Error interno del servidor" });
   }
 }
 
-export { registrarUsuario, login };
+//verificar token
+// Evento para verificar el token.
+//async function verifyTokenHandler(socket) {
+async function verifyTokenHandler(data, callback) {
+  const token = data.token;
+
+  try {
+    const user = jwt.verify(token, SECRET_KEY); // Verifica el token JWT
+
+    if (user) {
+      callback({
+        status: "success",
+        token
+      });
+      console.log("Token verificado correctamente", user);
+    } else {
+      callback("verifyTokenResponse", { valid: false });
+    }
+  } catch (error) {
+    console.error("Error verificando el token:", error);
+    callback("verifyTokenResponse", { valid: false });
+  }
+}
+
+export { registrarUsuario, login, verifyTokenHandler };
