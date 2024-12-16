@@ -6,10 +6,23 @@ import { SECRET_KEY, SALT_ROUNDS } from "../config/env.js"; // Clave secreta en 
 
 import { conectar as connectDB } from "../services/db.js";
 
-async function registrarUsuario({ user, email, password, rol = "usuario" }) {
-  // const { user, email, password, rol } = req.body;
+async function registrarUsuario(data, callback) {
+ // { user, email, password, rol = "usuario" }
+// const { user, email, password, rol } = req.body;
+const { user, password, email} = data;
+const rol = data.rol || "usuario";
   console.log("Registrando usuario");
-  console.log(user, email, password, rol);
+  console.log("usuario:", user, "email:", email, "password:", password, rol);
+
+  // verificamos que estan todos los datos antes de seguir
+  if (user.length === 0 || password.length === 0 || email.length === 0) {
+    console.log("Falta rellenar campos");
+    return callback({
+      status: "error",
+      message: "Datos incompletos, compruebe haber rellenado todos los campos",
+    });
+  }
+
   try {
     const conexion = await connectDB();
     console.log("Registrando usuario...");
@@ -25,11 +38,13 @@ async function registrarUsuario({ user, email, password, rol = "usuario" }) {
     console.log(rows);
     console.log("Resultados de búsqueda de usuario existente:", rows);
 
+    //comprobamos que no existe el usuario
     if (rows.length > 0) {
       console.log("El usuario ya existe");
-      return res
-        .status(400)
-        .json({ error: "El usuario o el email ya existen" });
+      return callback({
+        status: "error",
+        message: "El usuario o el email ya existen",
+      });
     }
 
     // Insertar en la base de datos
@@ -38,11 +53,17 @@ async function registrarUsuario({ user, email, password, rol = "usuario" }) {
       [user, email, hashedPassword, rol || "usuario"]
     );
     console.log("usuario registrado correctamente!");
-
-    res.status(201).json({ message: "Usuario registrado", id: result.id });
+    return callback({
+      status: "success",
+      message: "Usuario registrado",
+      user: user,
+    });
   } catch (error) {
     console.error("Error durante el registro:", error);
-    res.status(500).json({ error: "Error al registrar el usuario" });
+    return callback({
+      status: "error",
+      message: "Error al registrar el usuario",
+    });
   }
 }
 
@@ -50,52 +71,63 @@ async function login(data, callback) {
   const { user, password } = data;
   // const { user, password } = req.body;
   console.log("Intentando iniciar sesión");
-  //console.log(user, password);
-  try {
-    const conexion = await connectDB();
-    //console.log("Conexión exitosa");
-    const [rows] = await conexion.query(
-      "SELECT * FROM usuarios WHERE user = ?",
-      [user]
-    );
-    //console.log(rows);
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
-    }
-    //console.log(rows);
-    const usuario = rows;
-    //console.log(usuario);
+  console.log("user:", user, "password:", password);
 
-    // FALTA ACTIVAR BCRYPT
-    const isPasswordValid = await bcrypt.compare(password, usuario.password); //comparamos la contraseña
-    if (!isPasswordValid)
-      return res.status(401).json({ error: "Contraseña incorrecta" });
-    //if (password === usuario.password) console.log("Contraseña correcta");
-
-    // Genera un token JWT con el rol
-    const token = jwt.sign(
-      { userId: usuario.id, rol: usuario.rol },
-      SECRET_KEY,
-      { expiresIn: "1h" }
-    );
-    //se devuelve el callback con el status y el token con su rol
-    console.log(token, "user:", usuario.user, "rol:", usuario.rol);
-    callback({
-      status: "success",
-      token,
-      user: usuario.user,
-      rol: usuario.rol,
+  //comprobamos que tenemos los datos antes de seguir
+  if (user.length === 0 || password.length === 0) {
+    console.log("Faltan datos");
+    return callback({
+      status: "error",
+      message: "Falta usuario y/o contraseña",
     });
-    //res.json({ rol: usuario.rol });
-    console.log(
-      "Inicio de sesión exitoso. ID",
-      usuario.id,
-      "username: ",
-      usuario.user
-    );
-  } catch (error) {
-    console.error("Error en el evento 'login':", error);
-    callback({ status: "error", message: "Error interno del servidor" });
+  } else {
+    console.log("Datos recibidos");
+    try {
+      const conexion = await connectDB();
+      //console.log("Conexión exitosa");
+      const [rows] = await conexion.query(
+        "SELECT * FROM usuarios WHERE user = ?",
+        [user]
+      );
+      //console.log(rows);
+      if (rows === undefined) {
+        console.log("Usuario no encontrado");
+        return callback({ status: "error", message: "Usuario no encontrado" });
+      }
+      //console.log(rows);
+      const usuario = rows;
+      //console.log(usuario);
+
+      const isPasswordValid = await bcrypt.compare(password, usuario.password); //comparamos la contraseña
+      if (!isPasswordValid)
+        return callback({ status: "error", message: "Contraseña incorrecta" });
+      //if (password === usuario.password) console.log("Contraseña correcta");
+
+      // Genera un token JWT con el rol
+      const token = jwt.sign(
+        { userId: usuario.id, rol: usuario.rol },
+        SECRET_KEY,
+        { expiresIn: "1h" }
+      );
+      //se devuelve el callback con el status y el token con su rol
+      console.log(token, "user:", usuario.user, "rol:", usuario.rol);
+      callback({
+        status: "success",
+        token,
+        user: usuario.user,
+        rol: usuario.rol,
+      });
+      //res.json({ rol: usuario.rol });
+      console.log(
+        "Inicio de sesión exitoso. ID",
+        usuario.id,
+        "username: ",
+        usuario.user
+      );
+    } catch (error) {
+      console.error("Error en el evento 'login':", error);
+      callback({ status: "error", message: "Error interno del servidor" });
+    }
   }
 }
 
@@ -111,11 +143,11 @@ async function verifyTokenHandler(data, callback) {
     if (user) {
       callback({
         status: "success",
-        token
+        token,
       });
       console.log("Token verificado correctamente", user);
     } else {
-      callback("verifyTokenResponse", { valid: false });
+      callback("verifyTokenResponse", { message: false });
     }
   } catch (error) {
     console.error("Error verificando el token:", error);

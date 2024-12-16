@@ -68,12 +68,8 @@ io.on("connection", (socket) => {
 
   // conexion con base de datos
   socket.on("register", async (data, callback) => {
-    try {
-      const result = await registrarUsuario(data);
-      callback({ status: "success", ...result });
-    } catch (error) {
-      callback({ status: "error", message: error.message }); // El mensaje de error viene directamente de la función
-    }
+   await registrarUsuario(data, callback);
+    
   });
   /*
 socket.on("login", async (data, callback) => {
