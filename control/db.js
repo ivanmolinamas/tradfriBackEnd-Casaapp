@@ -59,12 +59,15 @@ const rol = data.rol || "usuario";
       user: user,
     });
   } catch (error) {
+    //si hay error, devolvemos el error y mostramos por consola
     console.error("Error durante el registro:", error);
     return callback({
       status: "error",
       message: "Error al registrar el usuario",
     });
   }
+     
+   
 }
 
 async function login(data, callback) {
@@ -83,6 +86,7 @@ async function login(data, callback) {
   } else {
     console.log("Datos recibidos");
     try {
+      //si nos han pasado datos, comprobamos esos datos en la base de datos
       const conexion = await connectDB();
       //console.log("Conexión exitosa");
       const [rows] = await conexion.query(
@@ -91,6 +95,7 @@ async function login(data, callback) {
       );
       //console.log(rows);
       if (rows === undefined) {
+        // si no hemos encontrado el usuario, devolvemos error
         console.log("Usuario no encontrado");
         return callback({ status: "error", message: "Usuario no encontrado" });
       }
@@ -100,6 +105,7 @@ async function login(data, callback) {
 
       const isPasswordValid = await bcrypt.compare(password, usuario.password); //comparamos la contraseña
       if (!isPasswordValid)
+        // si la contraseña no es correcta, devolvemos error
         return callback({ status: "error", message: "Contraseña incorrecta" });
       //if (password === usuario.password) console.log("Contraseña correcta");
 
@@ -117,7 +123,6 @@ async function login(data, callback) {
         user: usuario.user,
         rol: usuario.rol,
       });
-      //res.json({ rol: usuario.rol });
       console.log(
         "Inicio de sesión exitoso. ID",
         usuario.id,
@@ -125,12 +130,13 @@ async function login(data, callback) {
         usuario.user
       );
     } catch (error) {
+      //si hay error, devolvemos el error y mostramos por consola
       console.error("Error en el evento 'login':", error);
       callback({ status: "error", message: "Error interno del servidor" });
-    }
+    } 
+    
   }
 }
-
 //verificar token
 // Evento para verificar el token.
 //async function verifyTokenHandler(socket) {

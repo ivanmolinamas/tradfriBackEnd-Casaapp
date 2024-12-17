@@ -12,13 +12,16 @@ const pool = mariadb.createPool({
 });
 
 async function conectar() {
-
+let conexion;
   try {
-    const conexion = await pool.getConnection();
+     conexion = await pool.getConnection();
     console.log("Conexión exitosa a MariaDB");
     return conexion;
   } catch (err) {
     console.error("Error al conectar a MariaDB: ", err);
+  }finally {
+    if (conexion) conexion.release();
+    console.log("Conexión liberada");
   }
 }
 
