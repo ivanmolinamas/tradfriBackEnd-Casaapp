@@ -7,6 +7,7 @@ import {
   toggleLight,
   setDimmerLight,
   setTemperature,
+  toggleLight2
 } from "./control/light.js";
 import { app, io, server } from "./services/conectServices.js";
 import authRoutes from "./auth/authRoutes.js";
@@ -49,17 +50,31 @@ io.on("connection", (socket) => {
     const { id } = data;
     toggleLight(id);
   });
+  socket.on("setLightToggle2", async (data, callback) => {
+    await toggleLight2(data, callback);
+  });
   // evento para dimmer
+  /*
   socket.on("setDimmerDevice", (data) => {
     const { id, brightness } = data;
     setDimmerLight(id, brightness);
+  });*/
+
+  socket.on("setDimmerDevice", async (data, callback) => {
+    await setDimmerLight(data, callback);
   });
 
+  socket.on("setTemperature", async (data, callback) => {
+    await setTemperature(data, callback);
+  });
+
+  /*
   // evento para cambiar temperatura de color
   socket.on("setTemperature", (data) => {
     const { id, temperature } = data;
     setTemperature(id, temperature);
   });
+  */
 
   // Eventualmente puedes emitir un evento cuando un dispositivo cambia de estado
   socket.on("disconnect", () => {
