@@ -14,7 +14,7 @@ export function toggleLight(id) {
   }
 }
 
-// funcion con callback para hacer un toggle a una bombilla
+// función con callback para hacer un toggle a una bombilla
 export async function toggleLight2(data, callback) {
   // Obtenemos el ID del dispositivo
   const id = data.id;
@@ -57,6 +57,7 @@ export async function toggleLight2(data, callback) {
   }
 }
 
+// Dimmer de una bombilla
 export async function setDimmerLight(data, callback) {
   const id = data.id;
   const brightnessIN = data.brightness;

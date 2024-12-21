@@ -11,7 +11,7 @@ import {
 } from "./control/light.js";
 import { app, io, server } from "./services/conectServices.js";
 import authRoutes from "./auth/authRoutes.js";
-import { registrarUsuario, login, verifyTokenHandler } from "./control/db.js";
+import { registrarUsuario, login, verifyTokenHandler, getUsers } from "./control/db.js";
 //import connectDB from "./services/db.js"; // Ruta correcta a tu archivo db.js
 
 // Rutas para conexion con GET y POST
@@ -98,6 +98,10 @@ socket.on("login", async (data, callback) => {
 */
   socket.on("login", async (data, callback) => {
     await login(data, callback); // Pasa el callback correctamente
+  });
+// Obtener los usuarios
+  socket.on("getUsers", async (data, callback) => {
+    await getUsers(data, callback); // Pasa el callback correctamente
   });
 
   // Maneja la verificación del token
