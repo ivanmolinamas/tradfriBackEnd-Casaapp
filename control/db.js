@@ -6,7 +6,7 @@ import { SECRET_KEY, SALT_ROUNDS } from "../config/env.js"; // Clave secreta en 
 
 import { conectar as connectDB } from "../services/db.js";
 
-async function registrarUsuario(data, callback) {
+async function newUser(data, callback) {
  // { user, email, password, rol = "usuario" }
 // const { user, email, password, rol } = req.body;
 const { user, password, email} = data;
@@ -174,7 +174,7 @@ async function getUsers(callback) {
     const query = "SELECT id, user, email, rol FROM usuarios";
     const rows = await conexion.query(query);
 
-    console.log("Usuarios obtenidos correctamente:", rows);
+    //console.log("Usuarios obtenidos correctamente:", rows);
 
     // Verificar si se encontraron usuarios
     if (rows.length === 0) {
@@ -201,7 +201,67 @@ console.log("usuarios:",rows);
 }
 
 
+// Eliminar usuarios
+async function removeUser(data, callback) {
+  console.log("valor data:",data.userID)
+  const id  = data.userID; // Extraemos el ID del usuario a eliminar
+
+  console.log("Eliminando usuario con ID:", id);
+
+  // Verificamos que se pase el ID
+  if (!id) {
+    console.log("Falta el ID del usuario");
+    return callback({
+      status: "error",
+      message: "ID del usuario no proporcionado",
+    });
+  }
+
+  try {
+    // Conexión a la base de datos
+    const conexion = await connectDB();
+
+    // Comprobar si el usuario existe
+    const queryVerificar = "SELECT * FROM usuarios WHERE id = ?";
+    const [rows] = await conexion.query(queryVerificar, [id]);
+
+    if (rows.length === 0) {
+      console.log("El usuario no existe");
+      return callback({
+        status: "error",
+        message: "Usuario no encontrado",
+      });
+    }
+
+    // Eliminar el usuario
+    const queryEliminar = "DELETE FROM usuarios WHERE id = ?";
+    const resultado = await conexion.query(queryEliminar, [id]);
+
+    if (resultado.affectedRows > 0) {
+      console.log("Usuario eliminado correctamente");
+      return callback({
+        status: "success",
+        message: "Usuario eliminado correctamente",
+      });
+    } else {
+      console.log("No se pudo eliminar el usuario");
+      return callback({
+        status: "error",
+        message: "Error al eliminar el usuario",
+      });
+    }
+  } catch (error) {
+    // Manejar errores y retornar mensaje al cliente
+    console.error("Error al eliminar el usuario:", error);
+    return callback({
+      status: "error",
+      message: "Error interno del servidor al eliminar el usuario",
+    });
+  }
+}
 
 
 
-export { registrarUsuario, login, verifyTokenHandler, getUsers };
+
+
+export { newUser , login, verifyTokenHandler, getUsers, removeUser };
