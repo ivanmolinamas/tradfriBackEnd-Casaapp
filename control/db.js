@@ -161,4 +161,47 @@ async function verifyTokenHandler(data, callback) {
   }
 }
 
-export { registrarUsuario, login, verifyTokenHandler };
+
+// Obtener todos los usuarios
+async function getUsers(callback) {
+  console.log("Obteniendo lista de usuarios...");
+
+  try {
+    // Conectar a la base de datos
+    const conexion = await connectDB();
+
+    // Consultar todos los usuarios de la base de datos (sin incluir la contraseña)
+    const query = "SELECT id, user, email, rol FROM usuarios";
+    const rows = await conexion.query(query);
+
+    console.log("Usuarios obtenidos correctamente:", rows);
+
+    // Verificar si se encontraron usuarios
+    if (rows.length === 0) {
+      return callback({
+        status: "error",
+        message: "No se encontraron usuarios en la base de datos",
+      });
+    }
+console.log("usuarios:",rows);
+    // Retornar la lista de usuarios
+    return callback({
+      status: "success",
+      message: "Usuarios obtenidos correctamente",
+      usuarios: rows,
+    });
+  } catch (error) {
+    // Manejar errores y retornar mensaje al cliente
+    console.error("Error al obtener la lista de usuarios:", error);
+    return callback({
+      status: "error",
+      message: "Error interno del servidor al obtener usuarios",
+    });
+  }
+}
+
+
+
+
+
+export { registrarUsuario, login, verifyTokenHandler, getUsers };
