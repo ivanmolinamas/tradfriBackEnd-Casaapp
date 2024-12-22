@@ -111,7 +111,7 @@ async function login(data, callback) {
 
       // Genera un token JWT con el rol
       const token = jwt.sign(
-        { userId: usuario.id, rol: usuario.rol },
+        { userId: usuario.id, username: usuario.user ,rol: usuario.rol },
         SECRET_KEY,
         { expiresIn: "1h" }
       );
@@ -140,16 +140,18 @@ async function login(data, callback) {
 //verificar token
 // Evento para verificar el token.
 //async function verifyTokenHandler(socket) {
+/*
 async function verifyTokenHandler(data, callback) {
   const token = data.token;
 
   try {
-    const user = jwt.verify(token, SECRET_KEY); // Verifica el token JWT
+    const user = jwt.verify(token, SECRET_KEY, { expiresIn: "1h" }); // Verifica el token JWT
 
     if (user) {
       callback({
         status: "success",
         token,
+        user,
       });
       console.log("Token verificado correctamente", user);
     } else {
@@ -158,6 +160,45 @@ async function verifyTokenHandler(data, callback) {
   } catch (error) {
     console.error("Error verificando el token:", error);
     callback("verifyTokenResponse", { valid: false });
+  }
+}
+*/
+//verificar token
+// Evento para verificar el token.
+async function verifyTokenHandler(data, callback) {
+  const token = data.token;
+
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY); // Decodifica el token
+
+    if (decoded) {
+      console.log("Valor decoded:", decoded);
+      const { username, rol } = decoded; // Extraer usuario y rol del token
+      console.log("username y role: ", username, rol);
+      callback({
+        status: "success",
+        valid: true,
+        userData: {
+          username,
+          rol,
+        },
+      });
+
+      console.log(`Token verificado correctamente para el usuario: ${username}, rol: ${rol}`);
+    } else {
+      callback({
+        status: "error",
+        valid: false,
+        message: "Token no válido",
+      });
+    }
+  } catch (error) {
+    console.error("Error verificando el token:", error);
+    callback({
+      status: "error",
+      valid: false,
+      message: "Token expirado o inválido",
+    });
   }
 }
 
