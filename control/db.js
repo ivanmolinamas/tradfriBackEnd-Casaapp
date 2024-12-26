@@ -122,6 +122,7 @@ async function login(data, callback) {
         token,
         user: usuario.user,
         rol: usuario.rol,
+        id: usuario.id,
       });
       console.log(
         "Inicio de sesión exitoso. ID",
@@ -137,32 +138,7 @@ async function login(data, callback) {
     
   }
 }
-//verificar token
-// Evento para verificar el token.
-//async function verifyTokenHandler(socket) {
-/*
-async function verifyTokenHandler(data, callback) {
-  const token = data.token;
 
-  try {
-    const user = jwt.verify(token, SECRET_KEY, { expiresIn: "1h" }); // Verifica el token JWT
-
-    if (user) {
-      callback({
-        status: "success",
-        token,
-        user,
-      });
-      console.log("Token verificado correctamente", user);
-    } else {
-      callback("verifyTokenResponse", { message: false });
-    }
-  } catch (error) {
-    console.error("Error verificando el token:", error);
-    callback("verifyTokenResponse", { valid: false });
-  }
-}
-*/
 //verificar token
 // Evento para verificar el token.
 async function verifyTokenHandler(data, callback) {
@@ -173,12 +149,13 @@ async function verifyTokenHandler(data, callback) {
 
     if (decoded) {
       console.log("Valor decoded:", decoded);
-      const { username, rol } = decoded; // Extraer usuario y rol del token
-      console.log("username y role: ", username, rol);
+      const { username, rol, userId } = decoded; // Extraer usuario y rol del token
+      console.log("username y role: ", username, rol, userId);
       callback({
         status: "success",
         valid: true,
         userData: {
+          userId,
           username,
           rol,
         },
@@ -224,7 +201,7 @@ async function getUsers(callback) {
         message: "No se encontraron usuarios en la base de datos",
       });
     }
-console.log("usuarios:",rows);
+//console.log("usuarios:",rows);
     // Retornar la lista de usuarios
     return callback({
       status: "success",
@@ -301,8 +278,71 @@ async function removeUser(data, callback) {
   }
 }
 
+// Cambiar el rol de un usuario (de "usuario" a "admin" y viceversa)
+async function toggleUserRole(data, callback) {
+  const userID = data.userID; // ID del usuario cuyo rol se va a cambiar
+
+  console.log("Cambiando rol del usuario con ID:", userID);
+
+  // Verificar que se proporcione el ID del usuario
+  if (!userID) {
+    console.log("Falta el ID del usuario");
+    return callback({
+      status: "error",
+      message: "ID del usuario no proporcionado",
+    });
+  }
+
+  try {
+    // Conexión a la base de datos
+    const conexion = await connectDB();
+
+    // Consultar el rol actual del usuario
+    const queryObtenerRol = "SELECT rol FROM usuarios WHERE id = ?";
+    const [rows] = await conexion.query(queryObtenerRol, [userID]);
+    if (rows.length === 0) {
+      console.log("El usuario no existe");
+      return callback({
+        status: "error",
+        message: "Usuario no encontrado",
+      });
+    }
+
+    const rolActual = rows.rol;
+    console.log("valor rolActual:", rolActual);
+    console.log("Rol actual del usuario:", rolActual);
+
+    // Determinar el nuevo rol
+    const nuevoRol = rolActual === "usuario" ? "admin" : "usuario";
+
+    // Actualizar el rol en la base de datos
+    const queryActualizarRol = "UPDATE usuarios SET rol = ? WHERE id = ?";
+    const resultado = await conexion.query(queryActualizarRol, [nuevoRol, userID]);
+
+    if (resultado.affectedRows > 0) {
+      console.log("Rol del usuario actualizado correctamente a:", nuevoRol);
+      return callback({
+        status: "success",
+        message: "Rol del usuario actualizado correctamente",
+        nuevoRol: nuevoRol,
+      });
+    } else {
+      console.log("No se pudo actualizar el rol del usuario");
+      return callback({
+        status: "error",
+        message: "Error al actualizar el rol del usuario",
+      });
+    }
+  } catch (error) {
+    // Manejar errores y retornar mensaje al cliente
+    console.error("Error al cambiar el rol del usuario:", error);
+    return callback({
+      status: "error",
+      message: "Error interno del servidor al cambiar el rol del usuario",
+    });
+  }
+}
 
 
 
-
-export { newUser , login, verifyTokenHandler, getUsers, removeUser };
+export { newUser , login, verifyTokenHandler, getUsers, removeUser, toggleUserRole};

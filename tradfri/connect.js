@@ -12,8 +12,8 @@ export async function connectTradfri() {
     console.log("Conexión exitosa al gateway.");
 
     tradfri
-      .on("device updated", tradfri_deviceUpdated) // suscripcion a las actualizaciones de estado
-      .on("device removed", tradfri_deviceRemoved) // suscricpcion a dispositivos borrados
+      .on("device updated", tradfri_deviceUpdated) // suscripción a las actualizaciones de estado
+      .on("device removed", tradfri_deviceRemoved) // suscripción a dispositivos borrados
       .observeDevices();
       console.log("Observando dispositivos...");
   } catch (error) {

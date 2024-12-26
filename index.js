@@ -2,16 +2,33 @@ import { connectTradfri } from "./tradfri/connect.js"; // Asegúrate de importar
 import deviceRoutes from "./routes/deviceRoutes.js"; // Importa las rutas
 import lightRoutes from "./routes/lightRoutes.js";
 import plugRoutes from "./routes/plugRoutes.js";
-import { lightDevices, plugDevices } from "./tradfri/devices.js";
+import {
+  lightDevices,
+  plugDevices,
+  getUserDevices,
+} from "./tradfri/devices.js";
 import {
   toggleLight,
   setDimmerLight,
   setTemperature,
-  toggleLight2
+  toggleLight2,
 } from "./control/light.js";
 import { app, io, server } from "./services/conectServices.js";
 import authRoutes from "./auth/authRoutes.js";
-import {  newUser, login, verifyTokenHandler, getUsers, removeUser } from "./control/db.js";
+import {
+  newUser,
+  login,
+  verifyTokenHandler,
+  getUsers,
+  removeUser,
+  toggleUserRole,
+} from "./control/db.js";
+import {
+  getPersonalDevices,
+  setNamePersonalDevice,
+} from "./control/adminDevices.js";
+import { syncDevicesWithDatabase } from "./services/updateDevices.js";
+
 //import connectDB from "./services/db.js"; // Ruta correcta a tu archivo db.js
 
 // Rutas para conexion con GET y POST
@@ -19,26 +36,54 @@ app.use("/api", deviceRoutes); // Usa el prefijo '/api' para las rutas de dispos
 app.use("/light", lightRoutes); // Usa el prefijo '/light' para las rutas de bombillas
 app.use("/plug", plugRoutes); // Usa el prefijo '/plug' para las rutas de enchufes
 
+export const connectedUsers = new Map(); // Map para almacenar la relación socket.id -> userId
 // Conexion a traves de socket io
 io.on("connection", (socket) => {
   console.log("Nuevo cliente conectado socketIo");
 
-  // Enviar estado de los dispositivos al cliente
-  const lights = lightDevices();
-  const plugs = plugDevices();
-  //console.log(lights);
+  // Gestion del envío del estado de los dispositivos
+  socket.on("setIdUser", async (data) => {
+    console.log("Usuario conectado:", data);
+
+    // Guardar el id del usuario en el objeto socket
+    socket.userId = data.id;
+    connectedUsers.set(socket.id, data.id); // Almacena en el Map
+
+    // Obtiene los dispositivos con los nombres personalizados
+    const { updatedLights, updatedPlugs } = await getUserDevices(data.id);
+
+    // Enviar estado de los dispositivos al cliente con los nombres actualizados
+    socket.emit("devicesState", {
+      lights: updatedLights,
+      plugs: updatedPlugs,
+    });
+  });
+
+  // Escucha pedido de datos de los dispositivos
+  socket.on("getDevicesState", async (data) => {
+    // Obtiene los dispositivos con los nombres personalizados
+    const { updatedLights, updatedPlugs } = await getUserDevices(data.id);
+    console.log("Recibida solicitud de estado dispositivos para usuario");
+    socket.emit("devicesState", {
+      lights: updatedLights,
+      plugs: updatedPlugs,
+    });
+  });
+
+  /*
   socket.emit("devicesState", {
     lights,
     plugs,
   });
-  // Eschcua pedido de datos de los dispositivos
-  socket.on("getDevicesState", () => {
-    console.log("Recibida solicitud de estado dispositivos");
+  // Escucha pedido de datos de los dispositivos
+  socket.on("getDevicesState", (data) => {
+    console.log("Recibida solicitud de estado dispositivos para usuario");
     socket.emit("devicesState", {
       lights,
       plugs,
     });
   });
+  */
 
   // Escuchar encendido y apagado de bombillas
   socket.on("setLightToggle", (lightId) => {
@@ -53,12 +98,6 @@ io.on("connection", (socket) => {
   socket.on("setLightToggle2", async (data, callback) => {
     await toggleLight2(data, callback);
   });
-  // evento para dimmer
-  /*
-  socket.on("setDimmerDevice", (data) => {
-    const { id, brightness } = data;
-    setDimmerLight(id, brightness);
-  });*/
 
   socket.on("setDimmerDevice", async (data, callback) => {
     await setDimmerLight(data, callback);
@@ -68,50 +107,55 @@ io.on("connection", (socket) => {
     await setTemperature(data, callback);
   });
 
-  /*
-  // evento para cambiar temperatura de color
-  socket.on("setTemperature", (data) => {
-    const { id, temperature } = data;
-    setTemperature(id, temperature);
-  });
-  */
-
   // Eventualmente puedes emitir un evento cuando un dispositivo cambia de estado
+  /*
   socket.on("disconnect", () => {
     console.log("Cliente desconectado");
   });
-
+  */
+  socket.on("disconnect", () => {
+    if (connectedUsers.has(socket.id)) {
+      const userId = connectedUsers.get(socket.id);
+      console.log(`Usuario con ID ${userId} y socket ${socket.id} desconectado.`);
+      connectedUsers.delete(socket.id);
+    }
+  });
   // conexion con base de datos
   socket.on("register", async (data, callback) => {
-   await newUser(data, callback);
-    
+    await newUser(data, callback);
   });
-  /*
-socket.on("login", async (data, callback) => {
-  try {
-    const result = await login(data);
-    callback({ status: "success", ...result });
-  } catch (error) {
-    callback({ status: "error", message: error.message }); // El mensaje de error viene directamente de la función
-  }
-});
-*/
+
   socket.on("login", async (data, callback) => {
     await login(data, callback); // Pasa el callback correctamente
   });
-// Obtener los usuarios
+  // Obtener los usuarios
   socket.on("getUsers", async (data, callback) => {
     await getUsers(data, callback); // Pasa el callback correctamente
   });
-// Eliminar usuarios
+  // Eliminar usuarios
   socket.on("removeUser", async (data, callback) => {
     await removeUser(data, callback); // Pasa el callback correctamente
+  });
+  // Cambia el rol del usuario
+  socket.on("toggleUserRole", async (data, callback) => {
+    await toggleUserRole(data, callback); // Pasa el callback correctamente
   });
 
   // Maneja la verificación del token
   //verifyTokenHandler(socket);
   socket.on("verifyToken", async (data, callback) => {
     await verifyTokenHandler(data, callback); // Pasa el callback correctamente
+  });
+
+  /** funciones de control de dispositivos */
+
+  // Obtener dispositivos personales
+  socket.on("getPersonalDevices", async (data, callback) => {
+    await getPersonalDevices(data, callback); // Pasa el callback correctamente
+  });
+  // Obtener dispositivos personales
+  socket.on("setNamePersonalDevice", async (data, callback) => {
+    await setNamePersonalDevice(data, callback); // Pasa el callback correctamente
   });
 });
 
@@ -125,12 +169,18 @@ app.use("/auth", authRoutes);
   await connectDB(); // Aquí debería ejecutarse la conexión
 })();
 */
+
 import { conectar } from "./services/db.js";
 
 conectar();
 
 // Conectar con el Gateway de IKEA
-connectTradfri();
+async function startApp() {
+  await connectTradfri(); // Conectar al Gateway
+  setTimeout(syncDevicesWithDatabase, 3000); // Espera 5 segundos
+}
+
+startApp();
 
 // Iniciar servidores de socket y por GET y POST
 const PORT = process.env.PORT || 3000;
@@ -142,29 +192,6 @@ server.listen(4000, "0.0.0.0", () => {
   console.log("Servidor WebSocket en ejecución en el puerto 4000");
 });
 
-/*
-Explicación del código
-Configuración del servidor: Usamos Express para crear un servidor que escuche en un puerto específico.
-Conexión al gateway: La función connectTradfri() establece la conexión y observa los dispositivos.
-Rutas de la API:
-GET /api/devices: Devuelve la lista de dispositivos disponibles en el tradfri.
-GET /light/:id/state: Devuelve el estado de la bombilla especificada por su ID.
-POST /light/:id/toggle: Alterna el estado de la bombilla especificada por su ID.
-POST /plug/:id/toggle: Alterna el estado del enchufe especificado por su ID.
-GET /plug/:id/state: Devuelve el estado del enchufe especificado por su ID.
-Iniciar el servidor: El servidor comienza a escuchar en el puerto definido.
-Cómo usar la API
-Para verificar el estado de una bombilla:
-
-Realiza una solicitud GET a http://localhost:3000/light/65551/state (reemplaza 65551 con el ID de tu bombilla).
-Para alternar el estado de una bombilla:
-
-Realiza una solicitud POST a http://localhost:3000/light/65537/toggle
-Notas
-Asegúrate de que el servidor esté en ejecución antes de hacer las solicitudes.
-Puedes usar herramientas como Postman o cURL para probar las rutas de la API.
-
-*/
 /*
 Lista bombillas en casa
 Bombilla ID: 65537 = Oficina
