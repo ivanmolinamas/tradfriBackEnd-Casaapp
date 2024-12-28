@@ -1,4 +1,3 @@
-import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"; // para encriptar las contraseñas
 //import getPool  from "../services/db.js"; // Conexión a la base de datos
@@ -113,7 +112,7 @@ async function login(data, callback) {
       const token = jwt.sign(
         { userId: usuario.id, username: usuario.user ,rol: usuario.rol },
         SECRET_KEY,
-        { expiresIn: "1h" }
+        { expiresIn: "1h" } // Expira en 1 hora
       );
       //se devuelve el callback con el status y el token con su rol
       console.log(token, "user:", usuario.user, "rol:", usuario.rol);
@@ -142,15 +141,15 @@ async function login(data, callback) {
 //verificar token
 // Evento para verificar el token.
 async function verifyTokenHandler(data, callback) {
+  console.log("Verificando token...");
   const token = data.token;
-
   try {
     const decoded = jwt.verify(token, SECRET_KEY); // Decodifica el token
 
     if (decoded) {
-      console.log("Valor decoded:", decoded);
+      //console.log("Valor decoded:", decoded);
       const { username, rol, userId } = decoded; // Extraer usuario y rol del token
-      console.log("username y role: ", username, rol, userId);
+      //console.log("username y role: ", username, rol, userId);
       callback({
         status: "success",
         valid: true,

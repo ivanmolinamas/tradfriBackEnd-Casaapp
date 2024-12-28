@@ -1,6 +1,7 @@
 import { conectar as connectDB } from "../services/db.js";
 import mariadb from "mariadb";
 
+// Obtener la lista de los dispositivos personales por el ID del usuario
 async function getPersonalDevices(data, callback) {
   console.log("Obtener dispositivos");
   // iniciamos la conexion
@@ -25,31 +26,25 @@ async function getPersonalDevices(data, callback) {
   }
 }
 
-// Actualizar dispositivos personales
+// Actualiza con cambios como nuevo nombre y tipo de widget el dispositivo personal según el ID del usuario y el del dispositivo
 async function setNamePersonalDevice(data, callback) {
   console.log("Actualizar dispositivo");
-  console.log("data:", data);
+  //console.log("data:", data);
+  //Obtenemos los datos del cuerpo de la petición
   const { deviceId, customName, widgetType } = data.body;
   const userId = data.id; // ID del usuario autenticado
-  console.log(
-    "userId:",
-    userId,
-    "deviceId:",
-    deviceId,
-    "customName:",
-    customName,
-    "widgetType:",
-    widgetType
-  );
- // Validar si widgetType es uno de los valores permitidos, si no, asignar NULL
- const validWidgetTypes = ['slider', 'switch', 'text', 'chart'];
- const widgetTypeToInsert = validWidgetTypes.includes(widgetType) ? widgetType : null;
- console.log("widgetTypeToInsert:", widgetTypeToInsert);
+
+  // Validar si widgetType es uno de los valores permitidos, si no, asignar NULL
+  const validWidgetTypes = ["slider", "switch", "text", "chart"];
+  const widgetTypeToInsert = validWidgetTypes.includes(widgetType)
+    ? widgetType
+    : null;
+  console.log("widgetTypeToInsert:", widgetTypeToInsert);
   try {
-    const conexion = await connectDB();
+    const conexion = await connectDB(); // Iniciamos la conexión a BD
 
     // Verifica si el usuario ya tiene este dispositivo
-    const [existingDevice] = await conexion.query(
+    const [rows] = await conexion.query(
       `
       SELECT * FROM usuario_dispositivos
       WHERE user_id = ? AND device_id = ?
@@ -57,7 +52,9 @@ async function setNamePersonalDevice(data, callback) {
       [userId, deviceId]
     );
 
-    if (existingDevice && existingDevice.length > 0) {
+    // Comprobamos si el dispositivo existe para este usuario
+    //console.log("existingDevice:", rows);
+    if (!rows || rows.length === 0) {
       console.log("El dispositivo NO existe para este usuario");
       // Si el dispositivo NO existe para este usuario, inserta uno nuevo
       await conexion.query(
@@ -78,18 +75,18 @@ async function setNamePersonalDevice(data, callback) {
       // Si existe, realiza actualiza valores
       await conexion.query(
         `
-        INSERT INTO usuario_dispositivos (user_id, device_id, custom_name, widget_type)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE custom_name = VALUES(custom_name), widget_type = VALUES(widget_type)
-      `,
-        [userId, deviceId, customName, widgetTypeToInsert]
+        UPDATE usuario_dispositivos
+        SET custom_name = ?, widget_type = ?
+        WHERE user_id = ? AND device_id = ?
+        `,
+        [customName, widgetTypeToInsert, userId, deviceId]
       );
-
       callback({
         status: "success",
         message: "Dispositivo insertado correctamente.",
       });
     }
+    console.log("Dispositivo actualizado correctamente.");
   } catch (error) {
     console.log("Error al actualizar el dispositivo:", error);
     callback({
@@ -101,3 +98,11 @@ async function setNamePersonalDevice(data, callback) {
 }
 
 export { getPersonalDevices, setNamePersonalDevice };
+
+
+/**
+ * `
+        INSERT INTO usuario_dispositivos (user_id, device_id, custom_name, widget_type)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE custom_name = VALUES(custom_name), widget_type = VALUES(widget_type)
+ */

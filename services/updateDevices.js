@@ -19,8 +19,8 @@ export async function syncDevicesWithDatabase() {
     for (const light of lights) {
       await connection.execute(
         `
-        INSERT INTO dispositivos (ID_device, name_device, custom_name, type_device, widget_type)
-        VALUES (?, ?, NULL, 1, 'slider') 
+        INSERT INTO dispositivos (ID_device, name_device,  type_device, widget_type)
+        VALUES (?, ?, 1, 'slider') 
         ON DUPLICATE KEY UPDATE
           name_device = VALUES(name_device),
           type_device = VALUES(type_device)
@@ -34,8 +34,8 @@ export async function syncDevicesWithDatabase() {
     for (const plug of plugs) {
       await connection.execute(
         `
-        INSERT INTO dispositivos (ID_device, name_device, custom_name, type_device, widget_type)
-        VALUES (?, ?, NULL, 2, 'switch') 
+        INSERT INTO dispositivos (ID_device, name_device, type_device, widget_type)
+        VALUES (?, ?, 2, 'switch') 
         ON DUPLICATE KEY UPDATE
           name_device = VALUES(name_device),
           type_device = VALUES(type_device)
