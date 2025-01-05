@@ -17,11 +17,11 @@ export async function connectTradfri() {
       .on("device updated", tradfri_deviceUpdated) // suscripción a las actualizaciones de estado
       .on("device removed", tradfri_deviceRemoved) // suscripción a dispositivos borrados
       .observeDevices(); // Obtenemos los dispositivos disponibles
-      console.log("Observando dispositivos...");
+    console.log("Observando dispositivos...");
   } catch (error) {
     console.error("Error al conectar con el gateway:", error);
+    setTimeout(connectTradfri, 5000); // Reintentar en 5 segundosconnect
   }
 }
 
 export { tradfri }; // Exportar para usar en otros archivos
-

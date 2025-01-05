@@ -12,9 +12,9 @@ export const lightDevices = () => {
         name: device.name || "noName", // noName si no tiene nombre
         type: device.type, // tipo
         onOff: light.onOff, // estado actual del la bombilla
-        brightness: light.dimmer, // nivel de brillo
         alive: device.alive, // comprobamos que esta disponible
-        dimable: light.isDimmable, // comprobamos si es dimmable
+        brightness: light.dimmer, // nivel de brillo
+        isDimmable: light.isDimmable, // comprobamos si es dimmable
         colorTemperature: light.colorTemperature, // obtenemos la temperatura de color
         spectrum: light.spectrum, // obtenemos el tipo de luz
       };
