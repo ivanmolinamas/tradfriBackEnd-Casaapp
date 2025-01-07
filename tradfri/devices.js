@@ -7,6 +7,7 @@ export const lightDevices = () => {
   return Object.values(lightbulbs)
     .map((device) => {
       const light = device.lightList[0]; // Acceder al primer elemento de la lista de luces
+      //console.log("light:", light);
       return {
         id: device.instanceId,
         name: device.name || "noName", // noName si no tiene nombre
@@ -32,13 +33,17 @@ export const plugDevices = () => {
         type: device.type, // tipo
         onOff: device.plugList[0]?.onOff || false, // Verificar que tenga plugList y obtener onOff
         alive: device.alive, // comprobamos que esta disponible
+        isDimmable: false, // no es dimmable
       };
     })
     .sort((a, b) => a.id - b.id); // Ordenar por ID
 };
 
+// Importar la función de conexión a la base de datos
 import { conectar as connectDB } from "../services/db.js";
 
+
+// Función para obtener los dispositivos con el nombre de un usuario
 export async function getUserDevices(userId) {
   const conexion = await connectDB();
 
@@ -54,7 +59,7 @@ export async function getUserDevices(userId) {
      WHERE user_id = ?`,
     [userId]
   );
- //console.log("results:", results);
+ console.log("results:", results);
   // Mapeamos los resultados de la base de datos en un objeto para fácil acceso
   const customNames = results.reduce((acc, row) => {
     const { device_id, custom_name, widget_type } = row;
@@ -65,6 +70,7 @@ export async function getUserDevices(userId) {
   // Actualizamos nombres en las bombillas
   const updatedLights = lights.map((device) => {
     const customData = customNames[device.id];
+    console.log("customData:", customData);
     return {
       ...device,
       name: customData?.custom_name || device.name, // Si hay un nombre personalizado, lo usamos
@@ -81,7 +87,7 @@ export async function getUserDevices(userId) {
       widgetType: customData?.widget_type || null, // Incluimos el widget_type si está definido
     };
   });
- // console.log("updatedLights:", updatedLights);
+  console.log("updatedLights:", updatedLights);
 
   // Retornamos los dispositivos con los nombres y widgets actualizados
   return { updatedLights, updatedPlugs };

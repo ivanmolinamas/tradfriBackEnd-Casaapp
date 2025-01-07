@@ -1,6 +1,8 @@
 import { conectar as connectDB } from "../services/db.js";
 import mariadb from "mariadb";
+import { lightDevices } from "../tradfri/devices.js";
 
+/*
 // Obtener la lista de los dispositivos personales por el ID del usuario
 async function getPersonalDevices(data, callback) {
   console.log("Obtener dispositivos");
@@ -24,7 +26,7 @@ async function getPersonalDevices(data, callback) {
     console.error("Error al obtener dispositivos:", error);
     callback({ status: "error", error: "Error al obtener dispositivos." });
   }
-}
+}*/
 
 // Actualiza con cambios como nuevo nombre y tipo de widget el dispositivo personal según el ID del usuario y el del dispositivo
 async function setNamePersonalDevice(data, callback) {
@@ -39,7 +41,7 @@ async function setNamePersonalDevice(data, callback) {
   const widgetTypeToInsert = validWidgetTypes.includes(widgetType)
     ? widgetType
     : null;
-  console.log("widgetTypeToInsert:", widgetTypeToInsert);
+  //console.log("widgetTypeToInsert:", widgetTypeToInsert);
   try {
     const conexion = await connectDB(); // Iniciamos la conexión a BD
 
@@ -97,6 +99,51 @@ async function setNamePersonalDevice(data, callback) {
   }
 }
 
+// Testeo
+// Obtener la lista de los dispositivos personales por el ID del usuario
+async function getPersonalDevices(data, callback) {
+  console.log("Obtener dispositivos");
+  // Iniciamos la conexión
+  const conexion = await connectDB();
+  const userId = data.id; // ID del usuario autenticado
+
+  try {
+    // Obtenemos los dispositivos del usuario
+    const dispositivos = await conexion.query(
+      `
+      SELECT d.ID_device, d.name_device, ud.custom_name, ud.widget_type
+      FROM dispositivos d
+      LEFT JOIN usuario_dispositivos ud ON d.ID_device = ud.device_id AND ud.user_id = ?
+      `,
+      [userId]
+    );
+
+    // Obtenemos la lista de bombillas con sus propiedades
+    const lights = lightDevices(); // Supongamos que lightDevices() retorna un array de dispositivos con 'id' y 'isDimmable'
+
+    // Creamos un mapa para acceder a isDimmable por ID de forma eficiente
+    const lightDimmableMap = lights.reduce((acc, light) => {
+      acc[light.id] = light.isDimmable; // Mapeamos el ID al valor de isDimmable
+      return acc;
+    }, {});
+    
+    // Añadimos la propiedad isDimmable a cada dispositivo si está en la lista de bombillas
+    const dispositivosActualizados = dispositivos.map((dispositivo) => {
+      return {
+        ...dispositivo,
+        isDimmable: lightDimmableMap[dispositivo.ID_device] || false, // Si no está en el mapa, asumimos false
+      };
+    });
+    console.log("dispositivosActualizados:", dispositivosActualizados);
+    callback({ status: "success", devices: dispositivosActualizados });
+  } catch (error) {
+    console.error("Error al obtener dispositivos:", error);
+    callback({ status: "error", error: "Error al obtener dispositivos." });
+  }
+}
+
+
+// Exportar funciones
 export { getPersonalDevices, setNamePersonalDevice };
 
 
