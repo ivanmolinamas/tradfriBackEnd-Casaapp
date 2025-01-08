@@ -23,6 +23,19 @@ Con esto el programa se conectara y tendrá acceso a la pasarela tradfri y podre
 
 Para el entorno de desarrollo, la base de datos esta configurada con docker-compose, por lo cual solo necesitaremos levantarlo.
 
+Al iniciar la primera vez se crea la estructura de la base de datos con el archivo init.sql
+
+## Importante
+Tambien el programa creara un usurio admin si no existe
+por defecto sera:
+
+`usuario: admin`
+
+`contraseña:admin`
+
+
+
+para levantar docker:
 ```shell
 docker-compose up -d
 ```

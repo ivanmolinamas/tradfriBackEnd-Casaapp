@@ -3,14 +3,15 @@ version: "3.8"
 services:
   mariadb:
     image: mariadb:latest
-    container_name: mariadb-container
+    container_name: mariadb-casaapp
     environment:
       MYSQL_ROOT_PASSWORD: maria
       MYSQL_DATABASE: db1
     ports:
       - "3306:3306"
     volumes:
-      - C:\WS\TFG\backend\datos:/var/lib/mysql
+      - .\datos:/var/lib/mysql
+      - .\init.sql:/docker-entrypoint-initdb.d/init.sql
   phpmyadmin:
     image: phpmyadmin
     ports:
