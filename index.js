@@ -3,7 +3,7 @@ import { app, io, server } from "./services/conectServices.js";
 import { conectar } from "./services/db.js";
 import { syncDevicesWithDatabase } from "./services/updateDevices.js";
 import { handleSocketConnection } from "./control/socket.js"; // Importa la función
-
+import { ensureAdminUser } from "./control/db.js";
 // Map para almacenar la relación socket.id -> userId
 export const connectedUsers = new Map();
 
@@ -20,6 +20,9 @@ async function startApp() {
 }
 
 startApp();
+
+// aseguramos el usuario admin
+ensureAdminUser()
 
 server.listen(4000, "0.0.0.0", () => {
     console.log("Servidor WebSocket en ejecución en el puerto 4000");

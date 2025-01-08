@@ -34,7 +34,7 @@ const rol = data.rol || "usuario";
     const query = "SELECT * FROM usuarios WHERE user = ? "; //consulta query
     const rows = await conexion.query(query, [user]); // realizamos la consulta
     console.log("Comprobando si el usuario ya existe");
-    console.log(rows);
+    //console.log(rows);
     console.log("Resultados de búsqueda de usuario existente:", rows);
 
     //comprobamos que no existe el usuario
@@ -241,7 +241,7 @@ async function removeUser(data, callback) {
     // Comprobar si el usuario existe
     const queryVerificar = "SELECT * FROM usuarios WHERE id = ?";
     const [rows] = await conexion.query(queryVerificar, [id]);
-
+    
     if (rows.length === 0) {
       console.log("El usuario no existe");
       return callback({
@@ -342,6 +342,115 @@ async function toggleUserRole(data, callback) {
   }
 }
 
+// Cambiar la contraseña de un usuario
+async function changePassword(data, callback) {
+  const { userID, newPassword } = data;
+
+  console.log("Cambiando contraseña del usuario con ID:", userID);
+
+  // Verificar que se proporcionen los datos necesarios
+  if (!userID || !newPassword) {
+    console.log("Faltan datos (ID del usuario o nueva contraseña)");
+    return callback({
+      status: "error",
+      message: "Datos incompletos, proporcione el ID del usuario y la nueva contraseña",
+    });
+  }
+
+  try {
+    // Conexión a la base de datos
+    const conexion = await connectDB();
+
+    // Verificar si el usuario existe
+    const queryVerificarUsuario = "SELECT * FROM usuarios WHERE id = ?";
+    const [rows] = await conexion.query(queryVerificarUsuario, [userID]);
+
+    if (rows.length === 0) {
+      console.log("El usuario no existe");
+      return callback({
+        status: "error",
+        message: "Usuario no encontrado",
+      });
+    }
+
+    // Encriptar la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Actualizar la contraseña en la base de datos
+    const queryActualizar = "UPDATE usuarios SET password = ? WHERE id = ?";
+    const resultado = await conexion.query(queryActualizar, [hashedPassword, userID]);
+
+    if (resultado.affectedRows > 0) {
+      console.log("Contraseña actualizada correctamente");
+      return callback({
+        status: "success",
+        message: "Contraseña actualizada correctamente",
+      });
+    } else {
+      console.log("No se pudo actualizar la contraseña");
+      return callback({
+        status: "error",
+        message: "Error al actualizar la contraseña",
+      });
+    }
+  } catch (error) {
+    // Manejar errores y retornar mensaje al cliente
+    console.error("Error al cambiar la contraseña:", error);
+    return callback({
+      status: "error",
+      message: "Error interno del servidor al cambiar la contraseña",
+    });
+  }
+}
+
+// Función para crear y asegurar que tenemos un usuario admin en la base de datos
+async function ensureAdminUser() {
+  console.log("Verificando existencia de usuario admin...");
+
+  try {
+    const conexion = await connectDB();
+
+    // Buscar un usuario con rol 'admin'
+    const queryBuscarAdmin = "SELECT * FROM usuarios WHERE user = 'admin'";
+    const [rows] = await conexion.query(queryBuscarAdmin);
+
+    // comprobamos que no hay usuario admin
+    if (rows != undefined ) {
+      console.log("Ya existe un usuario admin en la base de datos.");
+      return { status: "success", message: "Usuario admin ya existe" };
+    }
+
+    console.log("No se encontró un usuario admin, creando uno nuevo...");
+
+    // Datos predeterminados para el nuevo admin
+    const adminUser = {
+      user: "admin",
+      email: "admin@example.com",
+      password: "admin", // Cambiar esto por una contraseña segura
+      rol: "admin",
+    };
+
+    // Encriptar la contraseña
+    const hashedPassword = await bcrypt.hash(adminUser.password, SALT_ROUNDS);
+
+    // Insertar el nuevo usuario admin en la base de datos
+    const queryCrearAdmin =
+      "INSERT INTO usuarios (user, email, password, rol) VALUES (?, ?, ?, ?)";
+    await conexion.query(queryCrearAdmin, [
+      adminUser.user,
+      adminUser.email,
+      hashedPassword,
+      adminUser.rol,
+    ]);
+
+    console.log("Usuario admin creado exitosamente.");
+    return { status: "success", message: "Usuario admin creado exitosamente" };
+  } catch (error) {
+    console.error("Error al verificar o crear usuario admin:", error);
+    return { status: "error", message: "Error interno del servidor" };
+  }
+}
 
 
-export { newUser , login, verifyTokenHandler, getUsers, removeUser, toggleUserRole};
+// Exportar funciones
+export { newUser , login, verifyTokenHandler, getUsers, removeUser, toggleUserRole, changePassword , ensureAdminUser};

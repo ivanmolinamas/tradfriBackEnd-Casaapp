@@ -99,7 +99,7 @@ async function setNamePersonalDevice(data, callback) {
   }
 }
 
-// Testeo
+
 // Obtener la lista de los dispositivos personales por el ID del usuario
 async function getPersonalDevices(data, callback) {
   console.log("Obtener dispositivos");
@@ -134,7 +134,7 @@ async function getPersonalDevices(data, callback) {
         isDimmable: lightDimmableMap[dispositivo.ID_device] || false, // Si no está en el mapa, asumimos false
       };
     });
-    console.log("dispositivosActualizados:", dispositivosActualizados);
+    //console.log("dispositivosActualizados:", dispositivosActualizados);
     callback({ status: "success", devices: dispositivosActualizados });
   } catch (error) {
     console.error("Error al obtener dispositivos:", error);

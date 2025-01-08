@@ -11,6 +11,7 @@ import {
     getUsers,
     removeUser,
     toggleUserRole,
+    changePassword,
 } from "../control/db.js";
 import {
     getPersonalDevices,
@@ -116,6 +117,11 @@ export function handleSocketConnection(io) {
 
         socket.on("setNamePersonalDevice", async (data, callback) => {
             await setNamePersonalDevice(data, callback);
+        });
+
+        // Evento para el cambio de contraseña
+        socket.on("changePassword", async (data, callback) => {
+            await changePassword(data, callback);
         });
     });
 }

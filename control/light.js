@@ -1,4 +1,4 @@
-import { lightbulbs } from "../tradfri/devices.js";
+import { lightbulbs, plugs } from "../tradfri/devices.js";
 
 export function toggleLight(id) {
   if (lightbulbs[id]) {
@@ -19,7 +19,8 @@ export async function toggleLight2(data, callback) {
   // Obtenemos el ID del dispositivo
   const id = data.id;
   try {
-    if (lightbulbs[id]) { //comprobamos que la bombilla existe
+    if (lightbulbs[id]) {
+      //comprobamos que la bombilla existe
       const device = lightbulbs[id]; //obtenemos el dispositivo
       const light = device.lightList[0]; //obtenemos la bombilla
       light //cambiamos el estado de la bombilla
@@ -47,6 +48,39 @@ export async function toggleLight2(data, callback) {
           callback({ status: "error", message: error.message });
           console.log("Error al cambiar el estado:", error);
         });
+      // comprobamos si es un enchufe
+    } else if (plugs[id]) {
+      console.log("Los enchufes no pueden ser controlados");
+      // De momento, los enchufes no pueden ser controlados
+      /*
+      const device = plugs[id]; //obtenemos el dispositivo
+      const plug = device; //obtenemos el enchufe
+      plug //cambiamos el estado de la bombilla
+        //.toggle()
+        .on()
+        .then((result) => {
+          //obtenemos el resultado
+          if (result) {
+            //resultado positivo
+            //console.log(result)
+            callback({
+              status: "success",
+              message: "Enchufe actualizado correctamente",
+            }); //devolvemos callback
+            console.log(`Bombilla ${id} cambiado su estado`);
+          } else {
+            // resultado negativo
+            callback({
+              status: "error",
+              message: "No se pudo cambiar el estado.",
+            }); //devolvemos callback
+            console.log("No se pudo cambiar el estado");
+          }
+        })
+        .catch((error) => {
+          callback({ status: "error", message: error.message });
+          console.log("Error al cambiar el estado:", error);
+        });*/
     } else {
       callback({ status: "error", message: "Dispositivo no encontrado" });
       throw new Error("Dispositivo no encontrado");
@@ -132,19 +166,19 @@ export async function setTemperature(data, callback) {
       message: "Dispositivo no encontrado.",
     });
   }
-    // Comprobar si es una bombilla
-    const device = lightbulbs[id];
-    const light = device.lightList[0]; // Asumiendo que solo hay un dispositivo de luz por bombilla
-    if (light.spectrum === "white") {
-      //comprobamos que la bombilla se pueda gestionar en temperatura de color.
-      light
+  // Comprobar si es una bombilla
+  const device = lightbulbs[id];
+  const light = device.lightList[0]; // Asumiendo que solo hay un dispositivo de luz por bombilla
+  if (light.spectrum === "white") {
+    //comprobamos que la bombilla se pueda gestionar en temperatura de color.
+    light
       .setColorTemperature(temperature, 0) // Cambiar el estado de la bombilla
       .then((result) => {
         if (result) {
-          console.log('Cambio de color de bombilla');
+          console.log("Cambio de color de bombilla");
           callback({
             status: "success",
-            message: 'Luz cambiada de color correctamente',
+            message: "Luz cambiada de color correctamente",
           });
         } else {
           console.log("No se pudo cambiar el color.");
@@ -157,11 +191,10 @@ export async function setTemperature(data, callback) {
       .catch((error) => {
         console.log("Error al cambiar el color:", error);
       });
-    } else{
-      callback({
-        status: "error",
-        message: "La bombilla no soporta cambio de color",
-      });
-    }
-
+  } else {
+    callback({
+      status: "error",
+      message: "La bombilla no soporta cambio de color",
+    });
+  }
 }

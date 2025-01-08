@@ -47,7 +47,7 @@ import { conectar as connectDB } from "../services/db.js";
 export async function getUserDevices(userId) {
   const conexion = await connectDB();
 
-  console.log("Obtener dispositivos del usuario:", userId);
+  //console.log("Obtener dispositivos del usuario:", userId);
   // Obtenemos las listas de dispositivos
   const lights = lightDevices();
   const plugs = plugDevices();
@@ -59,7 +59,7 @@ export async function getUserDevices(userId) {
      WHERE user_id = ?`,
     [userId]
   );
- console.log("results:", results);
+ //console.log("results:", results);
   // Mapeamos los resultados de la base de datos en un objeto para fácil acceso
   const customNames = results.reduce((acc, row) => {
     const { device_id, custom_name, widget_type } = row;
@@ -70,7 +70,7 @@ export async function getUserDevices(userId) {
   // Actualizamos nombres en las bombillas
   const updatedLights = lights.map((device) => {
     const customData = customNames[device.id];
-    console.log("customData:", customData);
+    //console.log("customData:", customData);
     return {
       ...device,
       name: customData?.custom_name || device.name, // Si hay un nombre personalizado, lo usamos
@@ -87,7 +87,7 @@ export async function getUserDevices(userId) {
       widgetType: customData?.widget_type || null, // Incluimos el widget_type si está definido
     };
   });
-  console.log("updatedLights:", updatedLights);
+  //console.log("updatedLights:", updatedLights);
 
   // Retornamos los dispositivos con los nombres y widgets actualizados
   return { updatedLights, updatedPlugs };
