@@ -1,5 +1,7 @@
 # CASAAPP
 
+## BACKEND
+
 Breve manual
 
 #### no olvidar hacer el `npm install`
@@ -110,3 +112,4 @@ npm run dev
 
 ## Usar programa en servidor
 
+Todavía en desarrollo...
